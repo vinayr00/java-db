@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Manager | Premium</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>Edu<span>Admin</span></h2>
+            </div>
+            <nav>
+                <button class="nav-btn active" data-target="dashboard">Dashboard</button>
+                <button class="nav-btn" data-target="add-student">Add Student</button>
+                <button class="nav-btn" data-target="view-students">All Students</button>
+            </nav>
+        </aside>
+
+        <main class="content">
+            <header>
+                <h1 id="page-title">Dashboard</h1>
+                <div class="user-info">
+                    <span>Admin</span>
+                </div>
+            </header>
+
+            <!-- Dashboard View -->
+            <section id="dashboard" class="view active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Students</h3>
+                        <p id="total-count">0</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Add Student View -->
+            <section id="add-student" class="view">
+                <div class="card">
+                    <h2>Register New Student</h2>
+                    <form id="student-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="regNum">Register Number</label>
+                                <input type="text" id="regNum" required placeholder="e.g. 2024CS01">
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Full Name</label>
+                                <input type="text" id="name" required placeholder="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label for="dept">Department</label>
+                                <input type="text" id="dept" placeholder="Computer Science">
+                            </div>
+                            <div class="form-group">
+                                <label for="year">Academic Year</label>
+                                <input type="text" id="year" placeholder="3rd Year">
+                            </div>
+                            <div class="form-group">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" placeholder="+1234567890">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" placeholder="john@example.com">
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Save Student</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- View Students View -->
+            <section id="view-students" class="view">
+                <div class="card table-card">
+                    <div class="table-header">
+                        <h2>Student List</h2>
+                        <button id="refresh-btn">Refresh</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Reg No</th>
+                                    <th>Name</th>
+                                    <th>Dept</th>
+                                    <th>Year</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="student-table-body">
+                                <!-- Data will be injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
