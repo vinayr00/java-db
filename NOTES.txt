@@ -1,0 +1,454 @@
+================================================================================
+          STUDENT MANAGEMENT SYSTEM - COMPLETE PROJECT NOTES
+================================================================================
+
+
+1. KEY JAVA CONCEPTS USED
+================================================================================
+
+    1. HttpServer (com.sun.net.httpserver)
+       - Java's built-in lightweight HTTP server
+       - No external server like Tomcat required
+       - createContext() maps URL paths to handler classes
+
+    2. HttpHandler Interface
+       - Both StaticHandler and StudentApiHandler implement this
+       - Must override the handle(HttpExchange exchange) method
+       - HttpExchange gives access to request method, URI, body, and response
+
+    3. JDBC (Java Database Connectivity)
+       - DriverManager.getConnection() to connect to database
+       - Statement for simple queries (SELECT, CREATE TABLE)
+       - PreparedStatement for parameterized queries (INSERT, DELETE)
+       - ResultSet to iterate over query results
+       - try-with-resources for automatic resource closing
+
+    4. Inner Classes
+       - StaticHandler is a static inner class of StudentBackend
+       - StudentApiHandler is a static inner class of StudentBackend
+       - Both are self-contained handlers within the main class
+
+    5. File I/O
+       - Files.readAllBytes() to read static files from disk
+       - BufferedReader to read the request body
+
+    6. JSON Handling
+       - No external library used (like Jackson or Gson)
+       - JSON is built manually using String.format()
+       - JSON is parsed manually using regex in extractJsonValue()
+
+
+2. KEY JAVASCRIPT CONCEPTS USED
+================================================================================
+
+    1. fetch() API
+       - Modern way to make HTTP requests from the browser
+       - Returns a Promise, used with async/await
+       - Supports GET, POST, DELETE and other HTTP methods
+
+    2. async/await
+       - Used to handle asynchronous API calls
+       - Makes asynchronous code look synchronous and readable
+
+    3. DOM Manipulation
+       - document.getElementById() to get elements
+       - document.querySelectorAll() to get multiple elements
+       - element.classList.add/remove() to toggle CSS classes
+       - element.innerHTML to set HTML content
+       - document.createElement() to create new elements
+
+    4. Event Listeners
+       - DOMContentLoaded event for page load
+       - click event on navigation buttons
+       - submit event on the form
+       - onclick attribute on delete buttons
+
+    5. Template Literals
+       - Backtick strings with ${variable} syntax
+       - Used to build HTML rows dynamically
+
+
+3. PROJECT OVERVIEW
+================================================================================
+
+
+    Language        : Java (Backend) + HTML/CSS/JavaScript (Frontend)
+    Database        : SQLite (file-based, no separate DB server needed)
+    Server          : Java's built-in com.sun.net.httpserver (HttpServer)
+    Port            : 8080 (accessed at http://localhost:8080)
+
+    Purpose:
+    A web-based application to manage student records. The admin can
+    Add, View, and Delete student details such as Register Number,
+    Name, Department, Year, Phone, and Email.
+
+
+4. PROJECT STRUCTURE (FILE MAP)
+================================================================================
+
+    java/
+    ├── StudentBackend.java         --> Main Java file (Backend Server + API + DB)
+    ├── run_web.bat                 --> Script to compile and run the project
+    ├── sqlite-jdbc-3.36.0.3.jar   --> SQLite JDBC Driver (library file)
+    ├── students.db                 --> SQLite Database file (auto-created)
+    ├── NOTES.txt                   --> This file (Project documentation)
+    ├── theory.txt                  --> Quick reference/theory notes
+    ├── public/                     --> Frontend folder (served by Java server)
+    │   ├── index.html              --> Main HTML page (UI structure)
+    │   ├── style.css               --> Styling for the web page
+    │   └── script.js               --> JavaScript (API calls + DOM logic)
+    └── legacy/                     --> Old/deprecated files (not in use)
+
+
+5. TECHNOLOGY STACK EXPLAINED
+================================================================================
+
+    FRONTEND:
+    ---------
+    - HTML5         : Page structure and layout (index.html)
+    - CSS3          : Styling, animations, responsive design (style.css)
+    - JavaScript    : DOM manipulation, API calls using fetch() (script.js)
+    - Google Fonts  : "Outfit" font family for modern typography
+
+    BACKEND:
+    --------
+    - Java          : Core programming language
+    - HttpServer    : Java's built-in HTTP server (com.sun.net.httpserver)
+                      No need for Tomcat or any external server!
+    - JDBC          : Java Database Connectivity for SQLite operations
+    - SQLite        : Lightweight file-based database (students.db)
+
+    EXTERNAL LIBRARY:
+    -----------------
+    - sqlite-jdbc-3.36.0.3.jar : JDBC driver that lets Java talk to SQLite
+
+
+6. HOW TO RUN THE PROJECT
+================================================================================
+
+    Step 1: Make sure Java (JDK) is installed on your system
+            Command to verify: java --version
+
+    Step 2: Open a terminal/command prompt in the project root folder:
+            c:\Users\dvndr\kaladharroyal\demo\java\
+
+    Step 3: Run the batch file:
+            ./run_web.bat
+
+    What run_web.bat does internally:
+        1. Compiles:  javac -cp ".;sqlite-jdbc-3.36.0.3.jar" StudentBackend.java
+        2. Runs:      java  -cp ".;sqlite-jdbc-3.36.0.3.jar" StudentBackend
+
+    Step 4: Open your browser and go to:
+            http://localhost:8080
+
+    Step 5: To stop the server, close the terminal window or press Ctrl+C.
+
+
+7. BACKEND EXPLANATION (StudentBackend.java)
+================================================================================
+
+    The backend is a single Java file that does THREE things:
+        A. Starts an HTTP server
+        B. Serves frontend static files (HTML/CSS/JS)
+        C. Handles API requests (CRUD operations on student data)
+
+    --- 7A. SERVER SETUP (main method, lines 17-33) ---
+
+        - Creates an HttpServer on port 8080
+        - Registers TWO route handlers:
+            1. "/" path         --> StaticHandler   (serves frontend files)
+            2. "/api/students"  --> StudentApiHandler (handles data operations)
+        - Starts the server and prints the URL to the console
+
+    --- 7B. DATABASE INITIALIZATION (initDatabase method, lines 35-55) ---
+
+        - Loads the SQLite JDBC driver: Class.forName("org.sqlite.JDBC")
+        - Connects to the database file: jdbc:sqlite:students.db
+        - Creates the "students" table if it doesn't already exist
+
+        SQL QUERY 1 - CREATE TABLE:
+        ┌─────────────────────────────────────────────────────────────────┐
+        │  CREATE TABLE IF NOT EXISTS students (                         │
+        │      register_number TEXT PRIMARY KEY,                         │
+        │      name TEXT,                                                │
+        │      department TEXT,                                          │
+        │      year TEXT,                                                │
+        │      phone TEXT,                                               │
+        │      email TEXT                                                │
+        │  )                                                             │
+        └─────────────────────────────────────────────────────────────────┘
+
+    --- 7C. STATIC FILE HANDLER (StaticHandler class, lines 58-93) ---
+
+        Purpose: Serves the frontend files from the "public/" folder.
+
+        How it works:
+        - When browser requests "/" it redirects to "/index.html"
+        - Reads the requested file from the "public/" directory
+        - Sets the correct Content-Type header:
+            .html --> text/html
+            .css  --> text/css
+            .js   --> application/javascript
+        - Sends the file content back to the browser
+        - Returns 404 if the file is not found
+
+    --- 7D. API HANDLER (StudentApiHandler class, lines 96-231) ---
+
+        Purpose: Handles all CRUD (Create, Read, Delete) operations.
+
+        The handler checks the HTTP method and routes to the right function:
+            GET    --> handleGet()    (fetch all students)
+            POST   --> handlePost()   (add a new student)
+            DELETE --> handleDelete() (remove a student)
+            Other  --> 405 Method Not Allowed
+
+        ── handleGet() (lines 121-146) ──
+            - Connects to SQLite database
+            - Runs SELECT query to get all students
+            - Builds a JSON array string manually
+            - Sends the JSON response back to frontend
+
+            SQL QUERY 2 - SELECT ALL:
+            ┌──────────────────────────────────┐
+            │  SELECT * FROM students          │
+            └──────────────────────────────────┘
+
+        ── handlePost() (lines 148-191) ──
+            - Reads the JSON body from the request
+            - Extracts each field (register_number, name, dept, year, phone, email)
+            - Validates that register_number and name are present
+            - Inserts the new student record into the database
+            - Sends success/error message back
+
+            SQL QUERY 3 - INSERT:
+            ┌──────────────────────────────────────────────────┐
+            │  INSERT INTO students VALUES (?, ?, ?, ?, ?, ?)  │
+            │  Parameters: reg, name, dept, year, phone, email │
+            └──────────────────────────────────────────────────┘
+
+        ── handleDelete() (lines 193-224) ──
+            - Reads the "id" from the URL query string (?id=2024CS01)
+            - Validates the id is present
+            - Deletes the matching record from the database
+            - Sends success/error message back
+
+            SQL QUERY 4 - DELETE:
+            ┌──────────────────────────────────────────────────────────────┐
+            │  DELETE FROM students WHERE register_number = ?             │
+            │  Parameter: id (the register number from URL)               │
+            └──────────────────────────────────────────────────────────────┘
+
+        ── extractJsonValue() (lines 226-230) ──
+            - A helper method to parse JSON manually using regex
+            - Pattern: "key":"value" --> extracts the value
+            - Used by handlePost() to read form data from the request body
+
+
+8. FRONTEND EXPLANATION
+================================================================================
+
+    --- 6A. index.html (public/index.html) ---
+
+        Structure:
+        ┌─────────────────────────────────────────────────────────────┐
+        │  <body>                                                     │
+        │  ├── <div class="container">                                │
+        │  │   ├── <aside class="sidebar">      --> Left Navigation   │
+        │  │   │   ├── Logo: "EduAdmin"                               │
+        │  │   │   ├── Button: Dashboard                              │
+        │  │   │   ├── Button: Add Student                            │
+        │  │   │   └── Button: All Students                           │
+        │  │   │                                                      │
+        │  │   └── <main class="content">       --> Right Content     │
+        │  │       ├── <header>                 --> Page Title + User  │
+        │  │       ├── <section id="dashboard">     --> Dashboard     │
+        │  │       │   └── Total Students Count Card                  │
+        │  │       ├── <section id="add-student">   --> Add Form      │
+        │  │       │   └── Form with 6 input fields                   │
+        │  │       └── <section id="view-students"> --> Student Table  │
+        │  │           └── Table with Reg, Name, Dept, Year, Actions  │
+        │  └── <script src="script.js">                               │
+        └─────────────────────────────────────────────────────────────┘
+
+        Three Views (only one visible at a time):
+            1. Dashboard     - Shows total student count
+            2. Add Student   - Form to register a new student
+            3. All Students  - Table listing all students with Delete button
+
+        Student Form Fields:
+            - Register Number (text, required)
+            - Full Name       (text, required)
+            - Department      (text)
+            - Academic Year   (text)
+            - Phone Number    (tel)
+            - Email Address   (email)
+
+    --- 6B. script.js (public/script.js) ---
+
+        This file handles ALL the interactivity and API communication.
+
+        PART 1: NAVIGATION LOGIC (lines 1-28)
+            - Selects all nav buttons and view sections
+            - On button click:
+                1. Highlights the clicked button (adds 'active' class)
+                2. Shows the matching section, hides the others
+                3. Updates the page title in the header
+                4. Triggers fetchStudents() when switching to Dashboard or Student List
+
+        PART 2: ADD STUDENT - POST API CALL (lines 30-64)
+            - Listens for form submit event
+            - Collects all 6 field values into a JavaScript object
+            - Sends a POST request to /api/students with JSON body
+            - On success: shows alert, clears form, refreshes student list
+            - On failure: shows error message
+
+            fetch('/api/students', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(student)
+            });
+
+        PART 3: FETCH STUDENTS - GET API CALL (lines 67-79)
+            - Sends a GET request to /api/students
+            - Receives JSON array of all students
+            - Calls updateTable() to build the HTML table
+            - Calls updateDashboard() to update the student count
+
+            fetch('/api/students')
+
+        PART 4: UPDATE TABLE (lines 82-100)
+            - Clears the existing table rows
+            - Loops through the student array
+            - Creates a new <tr> row for each student
+            - Each row has: Reg No, Name, Dept, Year, Delete Button
+
+        PART 5: UPDATE DASHBOARD (lines 103-105)
+            - Sets the total student count on the dashboard card
+
+        PART 6: DELETE STUDENT - DELETE API CALL (lines 116-134)
+            - This function is GLOBAL (outside DOMContentLoaded)
+            - Called when the Delete button in the table is clicked
+            - Shows a confirmation dialog
+            - Sends a DELETE request to /api/students?id=<register_number>
+            - On success: reloads the page
+
+            fetch(`/api/students?id=${regNum}`, { method: 'DELETE' })
+
+    --- 6C. style.css (public/style.css) ---
+
+        - Modern dark theme with gradient backgrounds
+        - Sidebar navigation with hover effects
+        - Card-based layout for dashboard and forms
+        - Responsive form grid (2-column layout)
+        - Styled table with hover effects
+        - Custom button styles with animations
+        - Google Font "Outfit" for clean typography
+
+
+9. FRONTEND ←→ BACKEND CONNECTION (API FLOW)
+================================================================================
+
+    The frontend and backend are connected through HTTP API calls.
+    The frontend uses JavaScript fetch() to talk to the backend.
+    All requests go to the SAME server (localhost:8080).
+
+    ┌──────────────────────────────────────────────────────────────────────────┐
+    │                                                                          │
+    │   Browser (localhost:8080)                                               │
+    │       │                                                                  │
+    │       ├── GET /               ► StaticHandler                            │
+    │       │                         ► serves index.html, style.css, script.js│
+    │       │                                                                  │
+    │       ├── GET /api/students   ► StudentApiHandler.handleGet()            │
+    │       │                         ► SQLite DB ► JSON array response        │
+    │       │                                                                  │
+    │       ├── POST /api/students  ► StudentApiHandler.handlePost()           │
+    │       │                         ► SQLite DB ► success/error message      │
+    │       │                                                                  │
+    │       └── DELETE /api/students?id=...                                    │
+    │                               ► StudentApiHandler.handleDelete()         │
+    │                                 ► SQLite DB ► success/error message      │
+    │                                                                          │
+    └──────────────────────────────────────────────────────────────────────────┘
+
+    COMPLETE FLOW - ADDING A STUDENT:
+    ──────────────────────────────────
+    1. User fills the form in index.html and clicks "Save Student"
+    2. script.js collects the form data into a JSON object
+    3. script.js sends: POST /api/students with JSON body
+    4. StudentBackend receives the request in StudentApiHandler.handle()
+    5. It sees method = "POST", so it calls handlePost()
+    6. handlePost() reads the JSON body, extracts each field
+    7. handlePost() connects to SQLite and runs INSERT query
+    8. handlePost() sends back "Student added successfully"
+    9. script.js receives the response, shows an alert
+    10. script.js calls fetchStudents() to refresh the table
+
+    COMPLETE FLOW - VIEWING STUDENTS:
+    ──────────────────────────────────
+    1. Page loads OR user clicks "All Students" or "Dashboard"
+    2. script.js sends: GET /api/students
+    3. StudentBackend receives the request in StudentApiHandler.handle()
+    4. It sees method = "GET", so it calls handleGet()
+    5. handleGet() connects to SQLite and runs SELECT * FROM students
+    6. handleGet() builds a JSON array string from the results
+    7. handleGet() sends back the JSON array
+    8. script.js receives the JSON, parses it
+    9. script.js calls updateTable() to build HTML rows in the table
+    10. script.js calls updateDashboard() to update the count
+
+    COMPLETE FLOW - DELETING A STUDENT:
+    ────────────────────────────────────
+    1. User clicks "Delete" button next to a student in the table
+    2. script.js shows a confirmation dialog
+    3. script.js sends: DELETE /api/students?id=2024CS01
+    4. StudentBackend receives the request in StudentApiHandler.handle()
+    5. It sees method = "DELETE", so it calls handleDelete()
+    6. handleDelete() reads the id from the query string
+    7. handleDelete() connects to SQLite and runs DELETE query
+    8. handleDelete() sends back "Student deleted successfully"
+    9. script.js receives the response, reloads the page
+
+
+10. SQL QUERIES SUMMARY
+================================================================================
+
+    Query 1 - CREATE TABLE (Database Initialization):
+        CREATE TABLE IF NOT EXISTS students (
+            register_number TEXT PRIMARY KEY,
+            name TEXT,
+            department TEXT,
+            year TEXT,
+            phone TEXT,
+            email TEXT
+        )
+
+        Location: initDatabase() method, line 43
+
+    Query 2 - SELECT ALL (Fetch Students):
+
+        SELECT * FROM students
+
+        Location: handleGet() method, line 127
+
+    Query 3 - INSERT (Add Student):
+        INSERT INTO students VALUES (?, ?, ?, ?, ?, ?)
+        Location: handlePost() method, line 175
+
+        Uses PreparedStatement to prevent SQL injection
+
+    Query 4 - DELETE (Remove Student):
+
+        DELETE FROM students WHERE register_number = ?
+
+        Location: handleDelete() method, line 213
+        Uses PreparedStatement to prevent SQL injection
+
+
+
+
+
+================================================================================
+                          END OF PROJECT NOTES
+================================================================================
